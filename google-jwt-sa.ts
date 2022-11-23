@@ -1,14 +1,18 @@
 import * as base64Url from 'https://deno.land/std@0.160.0/encoding/base64url.ts'
 import * as base64 from 'https://deno.land/std@0.165.0/encoding/base64.ts'
 
-export interface GoogleAuth {
+export type GoogleAuth = {
   access_token: string
   expires_in: number
   token_type: string
+} | {
+  status: number
+  statusText: string
+  error: string
 }
-// scope is a space deliminated string
+
 interface ClaimSetOptions {
-  scope: string
+  scope: string[]
   delegationSubject?: string
 }
 
@@ -21,63 +25,67 @@ interface ClaimSet {
   iat: number
 }
 
-export async function getGoogleJwtSa(keyFile: string, options: ClaimSetOptions) {
-  const keys = JSON.parse(keyFile)
-  const textEncoder = new TextEncoder()
+export { GoogleJwtSa }
 
-  const header = base64Url.encode(
-    JSON.stringify({ alg: 'RS256', typ: 'JWT' })
-  )
+const GoogleJwtSa = {
+  async getToken(keyFile: string, options: ClaimSetOptions) {
+    const keys = JSON.parse(keyFile)
+    const textEncoder = new TextEncoder()
 
-  const delegationSubject = options.delegationSubject || false
-  const scope = options.scope || 'https://www.googleapis.com/auth/userinfo.email'
+    const header = base64Url.encode(
+      JSON.stringify({ alg: 'RS256', typ: 'JWT' })
+    )
 
-  const iat = Math.floor(Date.now() / 1000)
-  const exp = iat + 3600
+    const scope = options.scope.join(' ')
+    const delegationSubject = options.delegationSubject || false
 
-  const c: ClaimSet = {
-    iss: keys.client_email,
-    scope,
-    aud: keys.token_uri,
-    exp,
-    iat
-  }
+    const iat = Math.floor(Date.now() / 1000)
+    const exp = iat + 3600
 
-  if (delegationSubject) {
-    c.sub = delegationSubject
-  }
-
-  const claimSet = base64Url.encode(
-    JSON.stringify(c)
-  )
-
-  const key = prepareKey(keys.private_key)
-
-  const algorithm = {
-    name: 'RSASSA-PKCS1-v1_5',
-    hash: {
-      name: 'SHA-256',
+    const c: ClaimSet = {
+      iss: keys.client_email,
+      scope,
+      aud: keys.token_uri,
+      exp,
+      iat
     }
+
+    if (delegationSubject) {
+      c.sub = delegationSubject
+    }
+
+    const claimSet = base64Url.encode(
+      JSON.stringify(c)
+    )
+
+    const key = prepareKey(keys.private_key)
+
+    const algorithm = {
+      name: 'RSASSA-PKCS1-v1_5',
+      hash: {
+        name: 'SHA-256',
+      }
+    }
+
+    const keyArrBuffer = base64.decode(key)
+
+    const privateKey = await crypto.subtle.importKey(
+      'pkcs8', keyArrBuffer, algorithm, false, ['sign']
+    )
+
+    const inputArrBuffer = textEncoder.encode(`${header}.${claimSet}`)
+
+    const outputArrBuffer = await crypto.subtle.sign(
+      { name: 'RSASSA-PKCS1-v1_5' },
+      privateKey,
+      inputArrBuffer
+    )
+
+    const signature = base64Url.encode(outputArrBuffer)
+    const assertion = `${header}.${claimSet}.${signature}`
+
+    return await fetchToken(assertion)
   }
-
-  const keyArrBuffer = base64.decode(key)
-
-  const privateKey = await crypto.subtle.importKey(
-    'pkcs8', keyArrBuffer, algorithm, false, ['sign']
-  )
-
-  const inputArrBuffer = textEncoder.encode(`${header}.${claimSet}`)
-
-  const outputArrBuffer = await crypto.subtle.sign(
-    { name: 'RSASSA-PKCS1-v1_5' },
-    privateKey,
-    inputArrBuffer
-  )
-
-  const signature = base64Url.encode(outputArrBuffer)
-  const assertion = `${header}.${claimSet}.${signature}`
-
-  return await fetchToken(assertion)
 }
 
 async function fetchToken(assertion: string) {
@@ -94,6 +102,16 @@ async function fetchToken(assertion: string) {
       body
     }
   )
+
+  if (!response.ok) {
+    const error = {
+      status: response.status,
+      statusText: response.statusText,
+      error: await response.json()
+    }
+    return error
+  }
+
   const jsonData = await response.json();
 
   return {

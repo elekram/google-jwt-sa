@@ -42,7 +42,7 @@ const GoogleJwtSa = {
     const iat = Math.floor(Date.now() / 1000)
     const exp = iat + 3600
 
-    const c: ClaimSet = {
+    const cs: ClaimSet = {
       iss: keys.client_email,
       scope,
       aud: keys.token_uri,
@@ -51,11 +51,11 @@ const GoogleJwtSa = {
     }
 
     if (delegationSubject) {
-      c.sub = delegationSubject
+      cs.sub = delegationSubject
     }
 
     const claimSet = base64Url.encode(
-      JSON.stringify(c)
+      JSON.stringify(cs)
     )
 
     const key = prepareKey(keys.private_key)

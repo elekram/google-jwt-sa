@@ -21,68 +21,67 @@ interface ClaimSet {
   iat: number
 }
 
-export { GoogleJwtSa }
+export { getToken }
 
-const GoogleJwtSa = {
-  async getToken(keyFile: string, options: ClaimSetOptions) {
-    const keys = JSON.parse(keyFile)
-    const textEncoder = new TextEncoder()
+async function getToken(keyFile: string, options: ClaimSetOptions) {
+  const keys = JSON.parse(keyFile)
+  const textEncoder = new TextEncoder()
 
-    const header = base64Url.encode(
-      JSON.stringify({ alg: 'RS256', typ: 'JWT' })
-    )
+  const header = base64Url.encode(
+    JSON.stringify({ alg: 'RS256', typ: 'JWT' })
+  )
 
-    const scope = options.scope.join(' ')
-    const delegationSubject = options.delegationSubject || false
+  const scope = options.scope.join(' ')
+  const delegationSubject = options.delegationSubject || false
 
-    const iat = Math.floor(Date.now() / 1000)
-    const exp = iat + 3600
+  const iat = Math.floor(Date.now() / 1000)
+  const exp = iat + 3600
 
-    const cs: ClaimSet = {
-      iss: keys.client_email,
-      scope,
-      aud: keys.token_uri,
-      exp,
-      iat
-    }
-
-    if (delegationSubject) {
-      cs.sub = delegationSubject
-    }
-
-    const claimSet = base64Url.encode(
-      JSON.stringify(cs)
-    )
-
-    const key = prepareKey(keys.private_key)
-
-    const algorithm = {
-      name: 'RSASSA-PKCS1-v1_5',
-      hash: {
-        name: 'SHA-256',
-      }
-    }
-
-    const keyArrBuffer = base64.decode(key)
-
-    const privateKey = await crypto.subtle.importKey(
-      'pkcs8', keyArrBuffer, algorithm, false, ['sign']
-    )
-
-    const inputArrBuffer = textEncoder.encode(`${header}.${claimSet}`)
-
-    const outputArrBuffer = await crypto.subtle.sign(
-      { name: 'RSASSA-PKCS1-v1_5' },
-      privateKey,
-      inputArrBuffer
-    )
-
-    const signature = base64Url.encode(outputArrBuffer)
-    const assertion = `${header}.${claimSet}.${signature}`
-
-    return await fetchToken(assertion)
+  const cs: ClaimSet = {
+    iss: keys.client_email,
+    scope,
+    aud: keys.token_uri,
+    exp,
+    iat
   }
+
+  if (delegationSubject) {
+    cs.sub = delegationSubject
+  }
+
+  const claimSet = base64Url.encode(
+    JSON.stringify(cs)
+  )
+
+  const key = prepareKey(keys.private_key)
+
+  const algorithm = {
+    name: 'RSASSA-PKCS1-v1_5',
+    hash: {
+      name: 'SHA-256',
+    }
+  }
+
+  const keyArrBuffer = base64.decode(key)
+
+  const privateKey = await crypto.subtle.importKey(
+    'pkcs8', keyArrBuffer, algorithm, false, ['sign']
+  )
+
+  const inputArrBuffer = textEncoder.encode(`${header}.${claimSet}`)
+
+  const outputArrBuffer = await crypto.subtle.sign(
+    { name: 'RSASSA-PKCS1-v1_5' },
+    privateKey,
+    inputArrBuffer
+  )
+
+  const signature = base64Url.encode(outputArrBuffer)
+  const assertion = `${header}.${claimSet}.${signature}`
+
+  return await fetchToken(assertion)
 }
+
 
 async function fetchToken(assertion: string) {
   const grantType = `urn:ietf:params:oauth:grant-type:jwt-bearer`
@@ -103,6 +102,7 @@ async function fetchToken(assertion: string) {
     const error = {
       status: response.status,
       statusText: response.statusText,
+      type: 'Google JWT',
       message: await response.json()
     }
     throw error

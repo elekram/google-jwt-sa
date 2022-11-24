@@ -5,10 +5,6 @@ export type GoogleAuth = {
   access_token: string
   expires_in: number
   token_type: string
-} | {
-  status: number
-  statusText: string
-  error: string
 }
 
 interface ClaimSetOptions {
@@ -103,13 +99,13 @@ async function fetchToken(assertion: string) {
     }
   )
 
-  if (!response.ok) {
+  if (response && !response.ok) {
     const error = {
       status: response.status,
       statusText: response.statusText,
-      error: await response.json()
+      message: await response.json()
     }
-    return error
+    throw error
   }
 
   const jsonData = await response.json();

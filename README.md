@@ -1,25 +1,33 @@
 # Google JWT SA ✨
-Get Google Auth Token for OAuth 2.0 for Server to Server Applications/Google APIs
+
+Get Google Auth Token for OAuth 2.0 for Server to Server Applications/Google
+APIs
 
 ### Usage
+
 ```ts
-import { GoogleAuth, getToken } from 'https://deno.land/x/googlejwtsa@{version}/mod.ts'
+import {
+  getToken,
+  GoogleAuth,
+} from "https://deno.land/x/googlejwtsa@{version}/mod.ts";
 
 const googleServiceAccountCredentials = await Deno.readTextFile(
-  filepath
-)
+  filepath,
+);
 
 const googleAuthOptions = {
-  scope: ['<Google API Endpoint URL>'], // array of Google's endpoint URLs
-  sub: 'someone@yourdomian.com' // optional subject for domain delegation
-}
+  scope: ["<Google API Endpoint URL>"], // array of Google's endpoint URLs
+  delegationSubject: "admin@yourdomian.com", // optional subject for domain delegation
+};
 
 const token: GoogleAuth = await getToken(
-  googleServiceAccountCredentials, googleAuthOptions
-)
+  googleServiceAccountCredentials,
+  googleAuthOptions,
+);
 ```
 
 ### Example content of Google service accounts credentials JSON file
+
 ```json
 {
   "type": "service_account",

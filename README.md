@@ -1,7 +1,7 @@
 # Google JWT SA ✨
 
-Get Google Auth Token for OAuth 2.0 for Server to Server Applications/Google
-(Service Accounts) APIs
+Gets a Google Auth Token (OAuth 2.0) for Google Workspace Service Accounts. Used
+for server to server applications and domain wide delegation.
 
 ### Usage
 

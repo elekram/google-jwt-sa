@@ -26,7 +26,7 @@ const token: GoogleAuth = await getToken(
 );
 ```
 
-### Example content of Google service accounts credentials JSON file
+### Example content of Google service accounts credentials JSON file. Get this from Google's admin console.
 
 ```json
 {

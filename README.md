@@ -17,7 +17,7 @@ const googleServiceAccountCredentials = await Deno.readTextFile(
 
 const googleAuthOptions = {
   scope: ["<Google API Endpoint URL>"], // array of Google's endpoint URLs
-  delegationSubject: "admin@yourdomian.com", // optional subject for domain delegation
+  delegationSubject: "admin@yourdomain.com", // optional subject for domain delegation
 };
 
 const token: GoogleAuth = await getToken(

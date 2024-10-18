@@ -2,9 +2,7 @@ import * as base64Url from 'https://deno.land/std@0.160.0/encoding/base64url.ts'
 import * as base64 from 'https://deno.land/std@0.165.0/encoding/base64.ts'
 
 export type GoogleAuth = {
-  access_token: string
-  expires_in: number
-  token_type: string
+  id_token: string
 }
 
 interface ClaimSetOptions {
@@ -108,13 +106,7 @@ async function fetchToken(assertion: string) {
     throw error
   }
 
-  const jsonData = await response.json();
-
-  return {
-    access_token: jsonData.access_token,
-    expires_in: jsonData.expires_in,
-    token_type: jsonData.token_type
-  }
+  return await response.json();
 }
 
 function prepareKey(key: string) {

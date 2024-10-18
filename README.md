@@ -24,6 +24,15 @@ const token: GoogleAuth = await getToken(
   googleServiceAccountCredentials,
   googleAuthOptions,
 );
+
+const response = await fetch("<Google API Endpoint URL>", {
+  method: 'POST',
+  body: '<Body>',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token.id_token}` 
+  },
+});
 ```
 
 ### Example content of Google service accounts credentials JSON file. Get this from Google's admin console.

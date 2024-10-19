@@ -20,10 +20,21 @@ const googleAuthOptions = {
   delegationSubject: "admin@yourdomain.com", // optional subject for domain delegation
 };
 
-const token: GoogleAuth = await getToken(
+const token = await getToken(
   googleServiceAccountCredentials,
   googleAuthOptions,
 );
+
+
+const response = await fetch("<Google API Endpoint URL>", {
+  method: 'POST',
+  body: '<body>',
+  headers: {
+    'Content-Type': 'application/json',
+    'accept': 'application/json',
+    'Authorization': `Bearer ${token.access_token}` // or token.id_token
+  },
+});
 ```
 
 ### Example content of Google service accounts credentials JSON file. Get this from Google's admin console.

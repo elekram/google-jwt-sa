@@ -6,10 +6,7 @@ for server to server applications and domain wide delegation.
 ### Usage
 
 ```ts
-import {
-  getToken,
-  GoogleAuth,
-} from "https://deno.land/x/googlejwtsa@{version}/mod.ts";
+import { getToken } from "https://deno.land/x/googlejwtsa@{version}/mod.ts";
 
 const googleServiceAccountCredentials = await Deno.readTextFile(
   filepath,
